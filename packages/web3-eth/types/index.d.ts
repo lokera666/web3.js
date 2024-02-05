@@ -36,7 +36,8 @@ import {
     chain,
     BlockNumber,
     LogsOptions,
-    PastLogsOptions
+    PastLogsOptions,
+    AccessTuple
 } from 'web3-core';
 import {Subscription} from 'web3-core-subscriptions';
 import {AbiCoder} from 'web3-eth-abi';
@@ -364,6 +365,17 @@ export class Eth {
         callback?: (error: Error, gas: number) => void
     ): Promise<number>;
 
+    createAccessList(
+        transactionConfig: TransactionConfig,
+        callback?: (error: Error, result: CreateAccessList) => void
+    ): Promise<CreateAccessList>;
+
+    createAccessList(
+        transactionConfig: TransactionConfig,
+        defaultBlock: BlockNumber,
+        callback?: (error: Error, result: CreateAccessList) => void
+    ): Promise<CreateAccessList>;
+
     getPastLogs(
         options: PastLogsOptions,
         callback?: (error: Error, logs: Log[]) => void
@@ -374,7 +386,9 @@ export class Eth {
     ): Promise<string[]>;
 
     submitWork(
-        data: [string, string, string],
+        nonce: string,
+        powHash: string,
+        digest: string,
         callback?: (error: Error, result: boolean) => void
     ): Promise<boolean>;
 
@@ -410,7 +424,7 @@ export interface BlockHeader {
     nonce: string;
     sha3Uncles: string;
     logsBloom: string;
-    transactionRoot: string;
+    transactionsRoot: string;
     stateRoot: string;
     receiptsRoot: string;
     miner: string;
@@ -441,6 +455,12 @@ export interface BlockTransactionString extends BlockTransactionBase {
     transactions: string[];
 }
 
+export interface CreateAccessList {
+    accessList: AccessTuple[];
+    error?: string;
+    gasUsed: string;
+}
+
 export interface GetProof {
     address: string;
     balance: string;
@@ -463,3 +483,5 @@ export interface FeeHistoryResult {
     oldestBlock: number;
     reward: string[][];
 }
+
+export default Eth

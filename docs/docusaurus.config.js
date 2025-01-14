@@ -37,11 +37,12 @@ const packages = [
 	'web3-providers-http',
 	'web3-providers-ws',
 	'web3-providers-ipc',
+	'web3-account-abstraction',
 ];
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-	title: 'web3.js',
+	title: 'Web3.js',
 	tagline: 'Powerful TypeScript libraries for Ethereum interaction and utility functions',
 	url: 'https://docs.web3js.org',
 	baseUrl: '/',
@@ -52,7 +53,7 @@ const config = {
 	// GitHub pages deployment config.
 	// If you aren't using GitHub pages, you don't need these.
 	organizationName: 'ChainSafe', // Usually your GitHub org/user name.
-	projectName: 'web3.js', // Usually your repo name.
+	projectName: 'Web3.js', // Usually your repo name.
 
 	// Even if you don't use internalization, you can use this field to set useful
 	// metadata like html lang. For example, if your site is Chinese, you may want
@@ -115,31 +116,30 @@ const config = {
 				},
 				items: [
 					{
-						to: '/',
-						activeBasePath: '/',
+						to: '/guides/getting_started/quickstart',
+						activeBasePath: '/guides',
 						label: 'Guides & Tutorials',
 						position: 'left',
 					},
 					{
 						to: '/libdocs/ABI',
-						activeBasePath: '/libdocs/',
-						label: 'Documentation',
+						activeBasePath: '/libdocs',
+						label: 'Packages',
 						position: 'left',
 					},
 					{
-						to: 'api', // 'api' is the 'out' directory
+						to: '/api', // 'api' is the 'out' directory
 						label: 'API',
 						position: 'left',
 					},
 					{
-						to: 'glossary',
-						activeBasePath: '/glossary/',
+						to: '/glossary',
+						activeBasePath: '/glossary',
 						label: 'Glossary',
 						position: 'left',
 					},
 					{
 						to: '/web3_playground',
-						activeBasePath: '/',
 						label: 'Playground',
 						position: 'right',
 					},
@@ -185,19 +185,43 @@ const config = {
 				 */
 				playgroundPosition: 'bottom',
 			},
-			image:"https://pbs.twimg.com/profile_images/1746099108937363456/duG_Pqem_400x400.jpg",
+			image: 'https://pbs.twimg.com/profile_images/1746099108937363456/duG_Pqem_400x400.jpg',
 			metadata: [
-				{ name: 'keywords', content: 'web3.js, web3, web3js, ethereum, ethereum json rpc, blockchain development, smart contracts, dapps, dApp development' },
-				{ name: 'description', content: 'Collection of comprehensive TypeScript libraries for Interaction with the Ethereum JSON RPC API and utility functions.' },
+				{
+					name: 'keywords',
+					content:
+						'web3.js, web3, web3js, ethereum, ethereum json rpc, blockchain development, smart contracts, dapps, dApp development',
+				},
+				{
+					name: 'description',
+					content:
+						'Collection of comprehensive TypeScript libraries for Interaction with the Ethereum JSON RPC API and utility functions.',
+				},
 				{ name: 'og:title', content: 'Web3.js Documentation' },
-				{ name: 'og:description', content: 'Collection of comprehensive TypeScript libraries for Interaction with the Ethereum JSON RPC API and utility functions.' },
+				{
+					name: 'og:description',
+					content:
+						'Collection of comprehensive TypeScript libraries for Interaction with the Ethereum JSON RPC API and utility functions.',
+				},
 				{ name: 'og:type', content: 'website' },
 				{ name: 'og:url', content: 'https://docs.web3js.org' },
-				{ name: 'og:image', content: 'https://pbs.twimg.com/profile_images/1746099108937363456/duG_Pqem_400x400.jpg' },
+				{
+					name: 'og:image',
+					content:
+						'https://pbs.twimg.com/profile_images/1746099108937363456/duG_Pqem_400x400.jpg',
+				},
 				{ name: 'twitter:card', content: 'summary_large_image' },
 				{ name: 'twitter:title', content: 'Web3.js Documentation' },
-				{ name: 'twitter:description', content: 'Official documentation for web3.js, the Type/JavaScript library for interacting with the Ethereum blockchain.' },
-				{ name: 'twitter:image', content: 'https://raw.githubusercontent.com/web3/web3.js/4.x/assets/logo/web3js.jpg' },
+				{
+					name: 'twitter:description',
+					content:
+						'Official documentation for web3.js, the Type/JavaScript library for interacting with the Ethereum blockchain.',
+				},
+				{
+					name: 'twitter:image',
+					content:
+						'https://raw.githubusercontent.com/web3/web3.js/4.x/assets/logo/web3js.jpg',
+				},
 			],
 		}),
 };

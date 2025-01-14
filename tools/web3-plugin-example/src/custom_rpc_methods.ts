@@ -18,7 +18,7 @@ import { Web3PluginBase } from 'web3-core';
 // eslint-disable-next-line require-extensions/require-extensions
 import { Web3Context } from './reexported_web3_context';
 // eslint-disable-next-line require-extensions/require-extensions
-import { Web3Middleware } from './middleware';
+import { Web3Middleware } from './request_manager_middleware';
 
 type CustomRpcApi = {
 	custom_rpc_method: () => string;
@@ -38,13 +38,10 @@ export class CustomRpcMethodsPlugin extends Web3PluginBase<CustomRpcApi> {
 	}
 
 	public link(parentContext: Web3Context): void {
-
-		if (this.web3Middleware)
-			parentContext.requestManager.setMiddleware(this.web3Middleware);
+		if (this.web3Middleware) parentContext.requestManager.setMiddleware(this.web3Middleware);
 
 		super.link(parentContext);
 	}
-
 
 	public async customRpcMethod() {
 		return this.requestManager.send({
@@ -59,7 +56,6 @@ export class CustomRpcMethodsPlugin extends Web3PluginBase<CustomRpcApi> {
 			params: [parameter1, parameter2],
 		});
 	}
-
 }
 
 // Module Augmentation

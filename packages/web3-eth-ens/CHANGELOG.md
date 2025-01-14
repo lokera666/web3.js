@@ -151,7 +151,7 @@ Documentation:
 
 ### Add
 
-- Added function getText and getName in ENS and resolver classes (#6914)
+-   Added function getText and getName in ENS and resolver classes (#6914)
 
 ## [4.3.0]
 
@@ -159,7 +159,7 @@ Documentation:
 
 -   `defaultReturnFormat` was added to all methods that have `ReturnType` param. (#6947)
 
-## [Unreleased]
+## [4.4.0]
 
 ### Added
 
@@ -169,3 +169,5 @@ Documentation:
 ### Fixed
 
 -   `getName` reverse resolution
+
+## [Unreleased]

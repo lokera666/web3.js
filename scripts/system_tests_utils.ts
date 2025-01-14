@@ -50,16 +50,16 @@ import {
 	Web3EthExecutionAPI,
 	FMT_NUMBER,
 	FMT_BYTES,
+	TransactionReceipt,
 } from 'web3-types';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Personal } from 'web3-eth-personal';
 // eslint-disable-next-line import/no-extraneous-dependencies
-import Web3 from 'web3';
+import { Web3, WebSocketProvider } from 'web3';
 
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { NonPayableMethodObject } from 'web3-eth-contract';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import HttpProvider from 'web3-providers-http';
+
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { IpcProvider } from 'web3-providers-ipc';
 import accountsString from './accounts.json';
@@ -90,6 +90,7 @@ export const getSystemTestProvider = <API extends Web3APISpec = Web3EthExecution
 	| string
 	| SupportedProviders<API> => {
 	const url = getSystemTestProviderUrl();
+
 	if (url.includes('ipc')) {
 		return new IpcProvider<API>(url);
 	}
@@ -154,36 +155,19 @@ export const waitForOpenConnection = async (
 	});
 
 export const closeOpenConnection = async (web3Context: Web3Context) => {
-	if (!isSocket || web3Context?.provider instanceof HttpProvider) {
-		return;
-	}
-
-	// make sure we try to close the connection after it is established
 	if (
 		web3Context?.provider &&
-		(web3Context.provider as unknown as Web3BaseProvider).getStatus() === 'connecting'
-	) {
-		await waitForOpenConnection(web3Context);
-	}
-
-	// If an error happened during closing, that is acceptable at tests, just print a 'warn'.
-	if (web3Context?.provider) {
-		(web3Context.provider as unknown as Web3BaseProvider).on('error', (err: any) => {
-			console.warn('error while trying to close the connection', err);
-		});
-	}
-
-	// Wait a bit to ensure the connection does not have a pending data that
-	//	could cause an error if written after closing the connection.
-	await new Promise<void>(resolve => {
-		setTimeout(resolve, 500);
-	});
-
-	if (
-		web3Context?.provider &&
+		(web3Context?.provider instanceof WebSocketProvider ||
+			web3Context?.provider instanceof IpcProvider) &&
 		'disconnect' in (web3Context.provider as unknown as Web3BaseProvider)
 	) {
-		(web3Context.provider as unknown as Web3BaseProvider).disconnect(1000, '');
+		(web3Context.provider as unknown as Web3BaseProvider).reset();
+		(web3Context.provider as unknown as Web3BaseProvider).disconnect();
+
+		await new Promise(resolve => {
+			const timer = setTimeout(resolve, 1);
+			timer.unref();
+		});
 	}
 };
 
@@ -240,11 +224,15 @@ export const createAccountProvider = (context: Web3Context<EthExecutionAPI>) => 
 export const refillAccount = async (from: string, to: string, value: string | number) => {
 	const web3Eth = new Web3Eth(DEFAULT_SYSTEM_PROVIDER);
 
-	await web3Eth.sendTransaction({
+	const receipt = await web3Eth.sendTransaction({
 		from,
 		to,
 		value,
 	});
+
+	if (receipt.status !== BigInt(1)) throw new Error('refillAccount failed');
+
+	await closeOpenConnection(web3Eth);
 };
 
 let mainAcc: string;
@@ -263,9 +251,11 @@ export const createNewAccount = async (config?: {
 			const url = getSystemTestProviderUrl();
 			const web3 = new Web3(url);
 			web3.registerPlugin(new HardhatPlugin());
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 			await web3.hardhat.impersonateAccount(acc.address);
-			// await impersonateAccount(acc.address);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 			await web3.hardhat.setBalance(acc.address, web3.utils.toHex('100000000'));
+			await closeOpenConnection(web3);
 		} else {
 			const web3Personal = new Personal(clientUrl);
 			if (!config?.doNotImport) {
@@ -278,6 +268,7 @@ export const createNewAccount = async (config?: {
 			}
 
 			await web3Personal.unlockAccount(acc.address, config.password ?? '123456', 100000000);
+			await closeOpenConnection(web3Personal);
 		}
 	}
 
@@ -286,18 +277,22 @@ export const createNewAccount = async (config?: {
 			const url = getSystemTestProviderUrl();
 			const web3 = new Web3(url);
 			web3.registerPlugin(new HardhatPlugin());
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
 			await web3.hardhat.setBalance(acc.address, web3.utils.toHex('100000000'));
+			await closeOpenConnection(web3);
 		} else {
 			const web3Personal = new Personal(clientUrl);
 			if (!mainAcc) {
 				[mainAcc] = await web3Personal.getAccounts();
 			}
 			await refillAccount(mainAcc, acc.address, '100000000000000000');
+			await closeOpenConnection(web3Personal);
 		}
 	}
 
 	return { address: acc.address.toLowerCase(), privateKey: acc.privateKey };
 };
+
 let tempAccountList: { address: string; privateKey: string }[] = [];
 const walletsOnWorker = 20;
 
@@ -316,8 +311,7 @@ export const createTempAccount = async (
 	if (
 		config.unlock === false ||
 		config.refill === false ||
-		config.privateKey ||
-		config.password
+		(config.privateKey ?? config.password)
 	) {
 		return createNewAccount({
 			unlock: config.unlock ?? true,
@@ -373,7 +367,9 @@ export const signTxAndSendEIP1559 = async (
 		from: acc.address,
 	};
 
-	return web3.eth.sendTransaction(txObj, undefined, { checkRevertBeforeSending: false });
+	return web3.eth.sendTransaction(txObj, undefined, {
+		checkRevertBeforeSending: false,
+	});
 };
 
 export const signTxAndSendEIP2930 = async (
@@ -391,7 +387,9 @@ export const signTxAndSendEIP2930 = async (
 		from: acc.address,
 	};
 
-	return web3.eth.sendTransaction(txObj, undefined, { checkRevertBeforeSending: false });
+	return web3.eth.sendTransaction(txObj, undefined, {
+		checkRevertBeforeSending: false,
+	});
 };
 
 export const signAndSendContractMethodEIP1559 = async (
@@ -426,7 +424,7 @@ export const signAndSendContractMethodEIP2930 = async (
 
 export const createLocalAccount = async (web3: Web3) => {
 	const account = web3.eth.accounts.create();
-	await refillAccount((await createTempAccount()).address, account.address, '10000000000000000');
+	await refillAccount((await createTempAccount()).address, account.address, '100000000000000000');
 	web3.eth.accounts.wallet.add(account);
 	return account;
 };
@@ -484,17 +482,19 @@ export const sendFewSampleTxs = async (cnt = 1) => {
 	const web3 = new Web3(DEFAULT_SYSTEM_PROVIDER);
 	const fromAcc = await createLocalAccount(web3);
 	const toAcc = createAccount();
-	const res = [];
+	const res: TransactionReceipt[] = [];
 	for (let i = 0; i < cnt; i += 1) {
-		res.push(
-			// eslint-disable-next-line no-await-in-loop
-			await web3.eth.sendTransaction({
-				to: toAcc.address,
-				value: '0x1',
-				from: fromAcc.address,
-				gas: '300000',
-			}),
-		);
+		// eslint-disable-next-line no-await-in-loop
+		const receipt = await web3.eth.sendTransaction({
+			to: toAcc.address,
+			value: '0x1',
+			from: fromAcc.address,
+			gas: '300000',
+		});
+
+		if (receipt.status !== BigInt(1)) throw new Error('sendFewSampleTxs failed ');
+
+		res.push(receipt);
 	}
 	await closeOpenConnection(web3);
 	return res;
@@ -515,3 +515,34 @@ export const mapFormatToType: { [key: string]: string } = {
 	[FMT_BYTES.HEX]: 'string',
 	[FMT_BYTES.UINT8ARRAY]: 'object',
 };
+
+export const waitForCondition = async (
+	conditionFunc: () => boolean,
+	logicFunc: () => Promise<void> | void,
+	maxIterations = 10, // 10 times
+	duration = 8000, // check after each 8 seconds
+): Promise<void> =>
+	new Promise<void>((resolve, reject) => {
+		let iterations = 0;
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
+		const interval = setInterval(async () => {
+			try {
+				if (iterations > 0 && conditionFunc()) {
+					// wait duration before first check
+					clearInterval(interval);
+					await logicFunc();
+					resolve();
+				} else {
+					iterations += 1;
+					if (iterations >= maxIterations) {
+						clearInterval(interval);
+						await logicFunc();
+						reject(new Error('Condition not met after 10 iterations.'));
+					}
+				}
+			} catch (error) {
+				clearInterval(interval);
+				reject(error);
+			}
+		}, duration);
+	});

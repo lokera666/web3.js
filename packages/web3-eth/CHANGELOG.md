@@ -248,4 +248,57 @@ Documentation:
 
 -   Fixed issue with simple transactions, Within `checkRevertBeforeSending` if there is no data set in transaction, set gas to be `21000` (#7043)
 
+## [4.8.0]
+
+### Added
+
+-   `sendTransaction` in `rpc_method_wrappers` accepts optional param of `TransactionMiddleware` (#7088)
+-   WebEth has `setTransactionMiddleware` and `getTransactionMiddleware` for automatically passing to `sentTransaction` (#7088)
+-   `TransactionMiddleware` and `TransactionMiddleware` data types are exported (#7088)
+
+## [4.8.1]
+
+### Fixed
+
+-   Fixed geth issue when running a new instance, transactions will index when there are no blocks created (#7098)
+
+## [4.8.2]
+
+### Fixed
+
+-   Adds transaction property to be an empty list rather than undefined when no transactions are included in the block (#7151)
+-   Change method `getTransactionReceipt` to not be casted as `TransactionReceipt` to give proper return type (#7159)
+
+## [4.9.0]
+
+### Changed
+
+-   Forwards the new `web3Context.config.customTransactionSchema` to `formatTransaction`
+
+### Added
+
+-   Adds the same `{transactionSchema?: ValidationSchemaInput}` that exists in `formatTransaction` to `validateTransactionForSigning`
+
+## [4.10.0]
+
+### Changed
+
+-   Allow `getEthereumjsTxDataFrom` to return additional fields that may be passed if using a `customTransactionSchema`.
+
+### Added
+
+-   `populateGasPrice` function now checks `Web3Context.config.ignoreGasPricing`. If `ignoreGasPricing` is true, gasPrice will not be estimated (#7320)
+
+## [4.11.0]
+
+### Added
+
+-   `createNewPendingTransactionFilter` , `createNewFilter` , `createNewBlockFilter` , `uninstallFilter` , `getFilterChanges` and `getFilterLogs` are exported from `Web3Eth` and `filtering_rpc_method_wrappers` (#7353)
+
+## [4.11.1]
+
+### Added
+
+-   Updated Typescript version 4 -> 5 (#7272)
+
 ## [Unreleased]
